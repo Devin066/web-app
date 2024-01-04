@@ -12,12 +12,17 @@ app.get("/", (req, res) => {
 });
 
 app.get("/process/:text", (req, res) => {
-  res.setHeader('Content-Type', 'application/json');
-  const text = req.params.text;
-  const caps = text.toUpperCase();
-  const hash = crc32.str(text).toString(16);
+  try {
+    res.setHeader('Content-Type', 'application/json');
+    const text = req.params.text;
+    const caps = text.toUpperCase();
+    const hash = crc32.str(text).toString(16);
   
-  res.json({ originalText: text, crc32Hash: hash, capText: caps });
+    res.json({ originalText: text, crc32Hash: hash, capText: caps });
+  } catch (error) {
+    console.error('Error processing request:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
 });
 
 app.listen(port, () => {
