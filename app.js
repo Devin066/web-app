@@ -1,5 +1,5 @@
-// const { tokenFromString } = require("./src/lib/AccessToken");
-// const { AccessToken2 } = require("./src/lib/AccessToken2");
+const { tokenFromString } = require("./src/lib/AccessToken");
+const { AccessToken2 } = require("./src/lib/AccessToken2");
 
 const express = require("express");
 const crc32 = require("crc-32");
@@ -17,8 +17,9 @@ app.get("/process/:text", (req, res) => {
     const text = req.params.text;
     const caps = text.toUpperCase();
     const hash = crc32.str(text).toString(16);
-  
-    res.json({ originalText: text, crc32Hash: hash, capText: caps });
+    const tokenization = toDictonary(text);
+    // console.log(tokenization);
+    res.json({ tokenData: tokenization});
   } catch (error) {
     console.error('Error processing request:', error);
     res.status(500).json({ error: 'Internal Server Error' });
@@ -63,7 +64,7 @@ function toDictonary(token){
       payload.appId = (`${appId}`);
       
     } catch (error) {
-      console.log(`Invalid Token`);
+      console.log(`Invalid Token Format`);
       process.exit(1);
     }
 
