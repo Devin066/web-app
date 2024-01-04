@@ -4,35 +4,24 @@
 const express = require("express");
 const crc32 = require("crc-32");
 
-
 const app = express();
 const port = 3000;
 
-// Serve HTML file
 app.get("/", (req, res) => {
-  res.sendFile(__dirname + "/*/index.html");
+  res.sendFile(__dirname + "/index.html");
 });
 
-// Process text and return CRC32 hash
 app.get("/process/:text", (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
   const text = req.params.text;
   const caps = text.toUpperCase();
   const hash = crc32.str(text).toString(16);
   
-
   res.json({ originalText: text, crc32Hash: hash, capText: caps });
 });
 
-
-// app.get("/process/:text", (req, res) => {
-//     const text = req.params.text;
-//     const hash = crc32.str(text).toString(16);
-  
-//     res.json({ originalText: text, crc32Hash: hash });
-//   });
-
 app.listen(port, () => {
-  console.log(`Server listening at http://localhost:${port}`);
+  console.log(`http://localhost:${port}`);
 });
 
 
