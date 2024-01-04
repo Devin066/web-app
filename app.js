@@ -10,7 +10,7 @@ const port = 3000;
 
 // Serve HTML file
 app.get("/", (req, res) => {
-  res.sendFile(__dirname + "/index.html");
+  res.sendFile(__dirname + "/*/index.html");
 });
 
 // Process text and return CRC32 hash
