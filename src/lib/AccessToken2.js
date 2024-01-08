@@ -10,7 +10,6 @@ async function crypto(data) {
   return hashArray.map(byte => byte.toString(16).padStart(2, '0')).join('');
 }
 
-
 const getVersion = () => {
   return "007";
 };
