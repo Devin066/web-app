@@ -212,9 +212,37 @@ function toDictonary(token){
 
     validty = checkValidity(createdOn, expiresOn);
     
-    payload.creation = createdOn;
-    payload.expiration = expiresOn;
-    payload.valid = (validty <= 0) ? "Expired" : validty;
+    const createdOnUtc = new Date(createdOn).toLocaleString('en-US', {
+      timeZone: 'UTC',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: true,
+      month: '2-digit',
+      day: '2-digit',
+      year: 'numeric'
+    });
+
+    const createdFormatted = formatDateAndTime(createdOnUtc);
+
+    actualExpiration = limitExpiration(createdOn, expiresOn);
+    const expiresOnUtc = new Date(actualExpiration).toLocaleString('en-US', {
+      timeZone: 'UTC',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: true,
+      month: '2-digit',
+      day: '2-digit',
+      year: 'numeric'
+    });
+
+    const expiresFormatted = formatDateAndTime(expiresOnUtc);
+
+    payload.creation = createdFormatted;
+    payload.expiration = expiresFormatted;
+
+    payload.valid = (validty <= 0) ? "Expired" : formatSeconds(validty);
 
     const serviceData = serviceTypes(tokenType, accessToken);
     payload.serviceType = tokenVersion(token) ? (`${tokenType}`) : serviceData.serviceType;
@@ -290,6 +318,42 @@ function checkValidity(createdOn, expiresOn) {
   const isValidNow = createdOn < now && expiresOn > now;
   const expiresIn = isValidNow ? Math.floor((expirationTime - (now - createdOn)) / 1000) : 0;
   return expiresIn;
+}
+
+function formatDateAndTime(dateTimeString) {
+  const [date, time] = dateTimeString.split(', ').map(str => str.trim());
+  const swappedDateTimeString = `${date} ${time}`;
+  return swappedDateTimeString;
+}
+
+function limitExpiration(createdDate, expirationDate) {
+  // Convert createdDate and expirationDate to milliseconds
+  const createdTime = new Date(createdDate).getTime();
+  let expirationTime = new Date(expirationDate).getTime();
+
+  // Calculate the maximum allowed expiration time (24 hours)
+  const maxExpirationTime = createdTime + (24 * 60 * 60 * 1000);
+
+  // Limit expiration time to the maximum allowed time, but not less than the created time
+  expirationTime = Math.max(createdTime, Math.min(expirationTime, maxExpirationTime));
+
+  // Return the limited expiration date
+  return new Date(expirationTime);
+}
+
+
+function formatSeconds(seconds) {
+  const units = ["D", "H", "M", "S"];
+  const divisors = [24 * 3600, 3600, 60, 1];
+
+  let formattedTime = units.map((unit, index) => {
+      const value = Math.floor(seconds / divisors[index]);
+      seconds %= divisors[index];
+      return value !== 0 ? `${value}${unit}` : "";
+    })
+    .filter(Boolean)
+    .join(" ");
+  return formattedTime || "";
 }
 
 
