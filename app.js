@@ -1,5 +1,4 @@
 const { AccessToken2 } = require("./src/lib/AccessToken2");
-
 const express = require("express");
 
 const app = express();
