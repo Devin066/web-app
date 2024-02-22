@@ -177,7 +177,7 @@ tokenFromString = function(originToken, channelName = null, uid = null) {
     this.appID = originToken.substr(VERSION_LENGTH, APP_ID_LENGTH);
     var originContent = originToken.substr(VERSION_LENGTH + APP_ID_LENGTH);
     var originContentDecodedBuf = Buffer.from(originContent, "base64");
-
+    console.log(originContent);
     var content = unPackContent(originContentDecodedBuf);
     this.signature = content.signature;
     this.crc_channel_name = content.crc_channel_name;
@@ -203,6 +203,7 @@ tokenFromString = function(originToken, channelName = null, uid = null) {
     expiresOn: msgs.messages[tokenType === "RTC" ? 1 : 1000] * 1000,
     role,
     tokenType,
+    uid: this.crc_uid,
   };
   if (channelName) {
     let channelNameHash = UINT32(crc32.str(channelName))
@@ -309,7 +310,7 @@ const unPackMessages = (bytes) => {
   });
 };
 
-const token = "006b2656396d43b4fd984f93865f98a6a2fIADqmChLiU1tNKxzUjd+QsfFH+8EuSOiyy+2Pxm8uwGZxAx+f9gh39v0IgDR+54DZuB7ZQQAAQBSbIZlAgBSbIZlAwBSbIZlBABSbIZl";
+const token = "006b2656396d43b4fd984f93865f98a6a2fIADt1T4FnL+hCxjQbiH0+h+6NnQdYaOa8eOl4VzmE1NFcwx+f9iYJ3kTIgBFx70AocfHZQQAAQAjdsZlAgAjdsZlAwAjdsZlBAAjdsZl";
 let channel = null;
 let userid = null;
 accessToken = tokenFromString(token, channel, userid);

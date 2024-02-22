@@ -340,7 +340,6 @@ function limitExpiration(createdDate, expirationDate) {
   return new Date(expirationTime);
 }
 
-
 function formatSeconds(seconds) {
   const units = ["D", "H", "M", "S"];
   const divisors = [24 * 3600, 3600, 60, 1];
