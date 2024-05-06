@@ -1,39 +1,23 @@
-const { AccessToken2 } = require("./src/lib/AccessToken2");
-const express = require("express");
+const express = require('express');
 const bodyParser = require('body-parser');
-const crc32 = require("crc-32");
-const UINT32 = require("cuint").UINT32;
-
 const app = express();
 const port = 3000;
 
-app.get("/", (req, res) => {
-  res.sendFile(__dirname + "/index.html");
-});
+const { AccessToken2 } = require("./src/lib/AccessToken2");
 
-// REST API
+const crc32 = require("crc-32");
+const UINT32 = require("cuint").UINT32;
+
 app.use(bodyParser.json());
-app.post('/v1/tokenization', (req, res) => { 
+
+app.post('/v1/tokenization', (req, res) => {
     const token = req.body.token;
     const parseToken = toDictonary(token);
-    res.json(parseToken);
-});
-
-app.get("/process/:text", (req, res) => {
-  try {
-    res.setHeader('Content-Type', 'application/json');
-    const token = req.params.text;
-    const tokenization = toDictonary(token);
-
-    res.json({ tokenData: tokenization});
-  } catch (error) {
-    console.error('Error processing request:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
+    res.json({ parseToken });
 });
 
 app.listen(port, () => {
-  console.log(`http://localhost:${port}`);
+    console.log(`Server running on port ${port}`);
 });
 
 function tokenFromString(originToken) {
@@ -55,7 +39,7 @@ function tokenFromString(originToken) {
       const msgs = unPackMessages(m);
       const ts = msgs.ts;
       const messages = msgs.messages;
-      const role = Object.keys(messages).length > 1 ? "Host" : "Audience";
+      const role = Object.keys(messages).length > 1 ? "Publisher" : "Subscriber";
       const tokenType = messages[1] ? "RTC" : messages[1000] ? "RTM" : false;
       if (!tokenType) return false;
       const uids = reverseCRC32(crc_uid, tokenType);
@@ -171,10 +155,11 @@ function tokenFromString(originToken) {
 
 function toDictonary(token){
   let payload = {};
-  let createdOn, expiresOn, tokenType;
+  let appId, createdOn, expiresOn, tokenType;
   let accessToken = null;
   
   if (tokenVersion(token) || token.startsWith("007") || token != null) {
+    // let serviceMap;
     if (token.startsWith("007")) {
       let serviceMap = new Map([
         [1, "RTC"],
@@ -185,6 +170,7 @@ function toDictonary(token){
       ]);
     }
     try {
+
       if (tokenVersion(token)){
         accessToken = tokenFromString(token);
       }else{
@@ -192,33 +178,35 @@ function toDictonary(token){
         accessToken.from_string(token);
       }
       payload.appId = (`${accessToken.appId}`);
+
       createdOn = tokenVersion(token) ? accessToken.createdOn : accessToken.issueTs * 1000;
       expiresOn = tokenVersion(token) ? accessToken.expiresOn : (accessToken.issueTs + accessToken.expire) * 1000;
       tokenType = tokenVersion(token) ? accessToken.tokenType : Object.keys(accessToken.services);
+      
     } catch (error) {
       console.log(`Invalid Token Format`);
     }
 
-    const serviceData = serviceTypes(tokenType, accessToken);
-
-    if (serviceData.channelName) { payload.channel = serviceData.channelName; }
-
     const createdFormatted = formatDateAndTime(createdOn);
     const expiresFormatted = formatDateAndTime(limitExpiration(createdOn, expiresOn));
-   
+
     payload.creation = createdFormatted;
     payload.expiration = tokenValidityCheck(createdOn, expiresOn) ? expiresFormatted : "Invalid Token Expiration";
-
-    payload.serviceType = tokenVersion(token) ? (`${tokenType}`) : serviceData.serviceType;
-
-    payload.role = tokenVersion(token) ? accessToken.role : "";
-    if (serviceData.role) { payload.role = serviceData.role; }
-
-    // payload.uid = tokenVersion(token) ? parseInt(accessToken.uid) : parseInt(serviceData.accountUID);
-    payload.uid = tokenVersion(token) ? accessToken.uid : serviceData.accountUID;
-
     validty = checkValidity(createdOn, expiresOn);
     payload.valid = (validty <= 0) ? "Expired" : formatSeconds(validty);
+
+    const serviceData = serviceTypes(tokenType, accessToken);
+    payload.serviceType = tokenVersion(token) ? (`${tokenType}`) : serviceData.serviceType;
+    
+    if (serviceData.channelName) {
+      payload.channel = serviceData.channelName;
+    }
+    payload.uid = tokenVersion(token) ? accessToken.uid : serviceData.accountUID;
+    payload.role = tokenVersion(token) ? accessToken.role : "";
+
+    if (serviceData.role) {
+      payload.role = serviceData.role;
+    }
     
   } else {
     console.log(`Invalid Token`);
