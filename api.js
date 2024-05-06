@@ -153,66 +153,64 @@ function tokenFromString(originToken) {
     return "Unknown";
   }
 
-function toDictonary(token){
-  let payload = {};
-  let appId, createdOn, expiresOn, tokenType;
-  let accessToken = null;
-  
-  if (tokenVersion(token) || token.startsWith("007") || token != null) {
-    // let serviceMap;
-    if (token.startsWith("007")) {
-      let serviceMap = new Map([
-        [1, "RTC"],
-        [2, "RTM"],
-        [4, "FPA"],
-        [5, "Chat"],
-        [7, "Education"],
-      ]);
-    }
-    try {
-
-      if (tokenVersion(token)){
-        accessToken = tokenFromString(token);
-      }else{
-        accessToken = new AccessToken2("", "", 0, 300);
-        accessToken.from_string(token);
+  function toDictonary(token){
+    let payload = {};
+    let createdOn, expiresOn, tokenType;
+    let accessToken = null;
+    
+    if (tokenVersion(token) || token.startsWith("007")) {
+      if (token.startsWith("007")) {
+        let serviceMap = new Map([
+          [1, "RTC"],
+          [2, "RTM"],
+          [4, "FPA"],
+          [5, "Chat"],
+          [7, "Education"],
+        ]);
       }
-      payload.appId = (`${accessToken.appId}`);
-
-      createdOn = tokenVersion(token) ? accessToken.createdOn : accessToken.issueTs * 1000;
-      expiresOn = tokenVersion(token) ? accessToken.expiresOn : (accessToken.issueTs + accessToken.expire) * 1000;
-      tokenType = tokenVersion(token) ? accessToken.tokenType : Object.keys(accessToken.services);
-      
-    } catch (error) {
-      console.log(`Invalid Token Format`);
+      try {
+        if (tokenVersion(token)){
+          accessToken = tokenFromString(token);
+        }else{
+          accessToken = new AccessToken2("", "", 0, 300);
+          accessToken.from_string(token);
+        }
+        payload.appId = (`${accessToken.appId}`);
+        createdOn = tokenVersion(token) ? accessToken.createdOn : accessToken.issueTs * 1000;
+        expiresOn = tokenVersion(token) ? accessToken.expiresOn : (accessToken.issueTs + accessToken.expire) * 1000;
+        tokenType = tokenVersion(token) ? accessToken.tokenType : Object.keys(accessToken.services);
+      } catch (error) {
+        console.log(`Invalid Token Format`);
+      }
+  
+      const serviceData = serviceTypes(tokenType, accessToken);
+  
+      if (serviceData.channelName) { payload.channel = serviceData.channelName; }
+  
+      const createdFormatted = formatDateAndTime(createdOn);
+      const expiresFormatted = formatDateAndTime(limitExpiration(createdOn, expiresOn));
+     
+      payload.creation = createdFormatted;
+      payload.expiration = tokenValidityCheck(createdOn, expiresOn) ? expiresFormatted : "Invalid Token Expiration";
+  
+      payload.serviceType = tokenVersion(token) ? (`${tokenType}`) : serviceData.serviceType;
+  
+      payload.role = tokenVersion(token) ? accessToken.role : "";
+      if (serviceData.role) { payload.role = serviceData.role; }
+  
+      // payload.uid = tokenVersion(token) ? parseInt(accessToken.uid) : parseInt(serviceData.accountUID);
+      payload.uid = tokenVersion(token) ? accessToken.uid : serviceData.accountUID;
+  
+      validty = checkValidity(createdOn, expiresOn);
+      payload.valid = (validty <= 0) ? "Expired" : formatSeconds(validty);
+  
+      return payload;
+    } else {
+      console.log(`Invalid Token`);
+      return "Invalid Token Format"
     }
-
-    const createdFormatted = formatDateAndTime(createdOn);
-    const expiresFormatted = formatDateAndTime(limitExpiration(createdOn, expiresOn));
-
-    payload.creation = createdFormatted;
-    payload.expiration = tokenValidityCheck(createdOn, expiresOn) ? expiresFormatted : "Invalid Token Expiration";
-    validty = checkValidity(createdOn, expiresOn);
-    payload.valid = (validty <= 0) ? "Expired" : formatSeconds(validty);
-
-    const serviceData = serviceTypes(tokenType, accessToken);
-    payload.serviceType = tokenVersion(token) ? (`${tokenType}`) : serviceData.serviceType;
-    
-    if (serviceData.channelName) {
-      payload.channel = serviceData.channelName;
-    }
-    payload.uid = tokenVersion(token) ? accessToken.uid : serviceData.accountUID;
-    payload.role = tokenVersion(token) ? accessToken.role : "";
-
-    if (serviceData.role) {
-      payload.role = serviceData.role;
-    }
-    
-  } else {
-    console.log(`Invalid Token`);
   }
-  return payload;
-}
+  
 
 function serviceTypes(service, accessToken) {
   const serviceData = {

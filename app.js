@@ -174,7 +174,7 @@ function toDictonary(token){
   let createdOn, expiresOn, tokenType;
   let accessToken = null;
   
-  if (tokenVersion(token) || token.startsWith("007") || token != null) {
+  if (tokenVersion(token) || token.startsWith("007")) {
     if (token.startsWith("007")) {
       let serviceMap = new Map([
         [1, "RTC"],
@@ -219,11 +219,12 @@ function toDictonary(token){
 
     validty = checkValidity(createdOn, expiresOn);
     payload.valid = (validty <= 0) ? "Expired" : formatSeconds(validty);
-    
+
+    return payload;
   } else {
     console.log(`Invalid Token`);
+    return "Invalid Token Format"
   }
-  return payload;
 }
 
 function serviceTypes(service, accessToken) {
