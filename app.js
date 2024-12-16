@@ -34,6 +34,7 @@ app.get("/process/:text", (req, res) => {
 
 app.listen(port, () => {
   console.log(`http://localhost:${port}`);
+  console.log(`Notifications Webhook Server ${port}`);
 });
 
 function tokenFromString(originToken) {
@@ -211,9 +212,10 @@ function toDictonary(token){
 
     payload.serviceType = tokenVersion(token) ? (`${tokenType}`) : serviceData.serviceType;
 
-    payload.role = tokenVersion(token) ? accessToken.role : "";
+    // payload.role = tokenVersion(token) ? accessToken.role : ""; // Need Error Handling
+    if (tokenVersion(token)) { payload.role = accessToken.role }
     if (serviceData.role) { payload.role = serviceData.role; }
-
+    
     // payload.uid = tokenVersion(token) ? parseInt(accessToken.uid) : parseInt(serviceData.accountUID);
     payload.uid = tokenVersion(token) ? accessToken.uid : serviceData.accountUID;
 
@@ -325,3 +327,20 @@ function formatDateAndTime(dateTimeString) {
   const swappedDateTimeString = `${date} ${time}`;
   return swappedDateTimeString;
 }
+
+app.post('/ncsNotify', (req, res) => {
+  const agoraSignature = req.headers['agora-signature'];
+  console.log('Agora-Signature:', agoraSignature);
+
+  const { noticeId, productId, eventType, payload } = req.body;
+
+  if (!payload) {
+    return res.status(400).send('Invalid JSON');
+  }
+
+  const { clientSeq, uid, channelName } = payload;
+
+  console.log(`Event code: ${eventType}, Uid: ${uid}, Channel: ${channelName}, ClientSeq: ${clientSeq}`);
+
+  res.status(200).send('Ok');
+});

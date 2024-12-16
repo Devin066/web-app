@@ -151,7 +151,7 @@ const unPackMessages = (bytes) => {
 };
 
 // const token = "006b2656396d43b4fd984f93865f98a6a2fIADRPMVYM0qBTOfdYI4ntomLERv/ZccHICi2gMW4AVOioZgneRMAAAAAEAD70doCpLo2ZgEA6AOhujZm"; // RTM
-const token = "006b2656396d43b4fd984f93865f98a6a2fIAA8eYS9pW69Bcxt70weB/qdsAl8+6Wt3EP1yAUxnX93vgx+f9jK7BWTIgCDZn0Eobw2ZgQAAQAgxTJmAgAgxTJmAwAgxTJmBAAgxTJm"; // RTC
+const token = "006b2656396d43b4fd984f93865f98a6a2fIACcIOdlZRyv9rAgh8UXEAzXvgV2mgJurKg3aeoRwUdW6Ax+f9gAAAAAIgAnJhgqi01bZgQAAQAbClpmAgAbClpmAwAbClpmBAAbClpm"; // RTC
 let channel = null;
 let userid = null;
 accessToken = tokenFromString(token, channel, userid);

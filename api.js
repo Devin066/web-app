@@ -1,7 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const app = express();
-const port = 3000;
+const port = 3001;
 
 const { AccessToken2 } = require("./src/lib/AccessToken2");
 
@@ -195,12 +195,13 @@ function tokenFromString(originToken) {
   
       payload.serviceType = tokenVersion(token) ? (`${tokenType}`) : serviceData.serviceType;
   
-      payload.role = tokenVersion(token) ? accessToken.role : "";
+      // payload.role = tokenVersion(token) ? accessToken.role : ""; // Need Error Handling
+      if (tokenVersion(token)) { payload.role = accessToken.role }
       if (serviceData.role) { payload.role = serviceData.role; }
-  
+      
       // payload.uid = tokenVersion(token) ? parseInt(accessToken.uid) : parseInt(serviceData.accountUID);
       payload.uid = tokenVersion(token) ? accessToken.uid : serviceData.accountUID;
-  
+
       validty = checkValidity(createdOn, expiresOn);
       payload.valid = (validty <= 0) ? "Expired" : formatSeconds(validty);
   
